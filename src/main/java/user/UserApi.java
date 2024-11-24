@@ -11,7 +11,7 @@ import static org.hamcrest.Matchers.equalTo;
 
 public class UserApi extends Specification {
 
-    @Step("Регистрация пользователя")
+    @Step("Создание пользователя")
     public ValidatableResponse createUser(User user) {
         return given()
                 .spec(getBaseSpec())
@@ -23,7 +23,20 @@ public class UserApi extends Specification {
 
     }
 
-    @Step("Вход пользователя")
+    @Step("Получение токена при создании пользователя")
+    public String getToken(User user) {
+        ValidatableResponse response = given()
+                .spec(getBaseSpec())
+                .body(user)
+                .when()
+                .post(USER_REGISTER)
+                .then()
+                .log().all();
+        String accessToken = response.extract().path("accessToken");
+        return accessToken;
+    }
+
+    @Step("Авторизация пользователя")
     public ValidatableResponse loginUser(User user) {
         return given()
                 .spec(getBaseSpec())
@@ -68,7 +81,7 @@ public class UserApi extends Specification {
                 .log().all();
     }
 
-    @Step("Проверка ответа на вход существующего пользователя")
+    @Step("Проверка кода и тела ответа при авторизации существующего пользователя")
     public String validateLoginResponse(ValidatableResponse loginResponse) {
         loginResponse.assertThat()
                 .statusCode(SC_OK)
@@ -78,7 +91,7 @@ public class UserApi extends Specification {
         return loginResponse.extract().path("accessToken");
     }
 
-    @Step("Проверка ответа на вход с неверным паролем")
+    @Step("Проверка кода и тела ответа при попытке авторизации с неверным паролем")
     public void validateLoginIncorrectPasswordResponse(ValidatableResponse loginResponse) {
         loginResponse.assertThat()
                 .statusCode(SC_UNAUTHORIZED)
@@ -86,16 +99,15 @@ public class UserApi extends Specification {
                 .body("message", equalTo("email or password are incorrect"));
     }
 
-    @Step("Проверка ответа на вход с неверным email")
+    @Step("Проверка кода и тела ответа при попытке авторизации с неверным email")
     public void validateLoginIncorrectEmailResponse(ValidatableResponse loginResponse) {
-        // Проверка статус-кода и сообщения в теле ответа
         loginResponse.assertThat()
                 .statusCode(SC_UNAUTHORIZED)
                 .and()
                 .body("message", equalTo("email or password are incorrect"));
     }
 
-    @Step("Проверка ответа на создание пользователя")
+    @Step("Проверка кода и тела ответа при создании пользователя")
     public String validateCreateUserResponse(ValidatableResponse createResponse) {
         createResponse.assertThat()
                 .statusCode(SC_OK)
@@ -105,7 +117,7 @@ public class UserApi extends Specification {
         return createResponse.extract().path("accessToken");
     }
 
-    @Step("Проверка ответа при попытке создания существующего пользователя")
+    @Step("Проверка кода и тела ответа при создании существующего пользователя")
     public void validateCreateExistingUserResponse(ValidatableResponse createResponse) {
         createResponse.assertThat()
                 .statusCode(SC_FORBIDDEN)
@@ -113,7 +125,7 @@ public class UserApi extends Specification {
                 .body("message", equalTo("User already exists"));
     }
 
-    @Step("Проверка ответа для пользователя с не заполненным полем")
+    @Step("Проверка кода и тела ответа при создании пользователя, если не заполнено обязательное поле")
     public void validateCreateUserWithoutFieldResponse(ValidatableResponse createResponse) {
         createResponse.assertThat()
                 .statusCode(SC_FORBIDDEN)
@@ -121,7 +133,7 @@ public class UserApi extends Specification {
                 .body("message", equalTo("Email, password and name are required fields"));
     }
 
-    @Step("Проверка ответа на обновление данных авторизованного пользователя")
+    @Step("Проверка кода и тела ответа при обновлении данных авторизованного пользователя")
     public void validateUpdateUserResponse(ValidatableResponse updateResponse) {
         updateResponse.assertThat()
                 .statusCode(SC_OK)
@@ -129,7 +141,7 @@ public class UserApi extends Specification {
                 .body("success", equalTo(true));
     }
 
-    @Step("Проверка ответа на обновление данных неавторизованного пользователя")
+    @Step("Проверка кода и тела ответа при обновлении данных авторизованного пользователя")
     public void validateUpdateUserWithoutAuthResponse(ValidatableResponse updateResponse) {
         updateResponse.assertThat()
                 .statusCode(SC_UNAUTHORIZED)

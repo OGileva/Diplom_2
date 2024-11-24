@@ -12,7 +12,7 @@ import static org.hamcrest.Matchers.notNullValue;
 
 public class OrderApi extends Specification {
 
-    @Step("Создание заказа авторизованного пользователя")
+    @Step("Создание заказа авторизованным пользователем")
     public ValidatableResponse createOrderWithAuth(Order order, String accessToken) {
         return given()
                 .spec(getBaseSpec())
@@ -24,7 +24,7 @@ public class OrderApi extends Specification {
                 .log().all();
     }
 
-    @Step("Создание заказа неавторизованного пользователя")
+    @Step("Создание заказа неавторизованным пользователем")
     public ValidatableResponse createOrderWithoutAuth(Order order) {
         return given()
                 .spec(getBaseSpec())
@@ -35,7 +35,7 @@ public class OrderApi extends Specification {
                 .log().all();
     }
 
-    @Step("Получение заказа авторизованного пользователя")
+    @Step("Получение заказа авторизованным пользователем")
     public ValidatableResponse getOrderWithAuth(String accessToken) {
         return given()
                 .spec(getBaseSpec())
@@ -46,7 +46,7 @@ public class OrderApi extends Specification {
                 .log().all();
     }
 
-    @Step("Получение заказа неавторизованного пользователя")
+    @Step("Получение заказа неавторизованным пользователем")
     public ValidatableResponse getOrderWithoutAuth() {
         return given()
                 .spec(getBaseSpec())
@@ -56,15 +56,8 @@ public class OrderApi extends Specification {
                 .log().all();
     }
 
-    @Step("Проверка ответа на успешный вход")
-    public void validateLoginResponse(ValidatableResponse loginResponse) {
-        loginResponse.assertThat()
-                .statusCode(SC_OK)
-                .and()
-                .body("success", equalTo(true));
-    }
 
-    @Step("Проверка ответа на создание заказа")
+    @Step("Проверка ответа при создании заказа")
     public void validateCreateOrderResponse(ValidatableResponse orderResponse) {
         orderResponse.assertThat()
                 .statusCode(SC_OK)
@@ -74,7 +67,7 @@ public class OrderApi extends Specification {
                 .body("order.number", notNullValue());
     }
 
-    @Step("Проверка ответа на создание заказа без ингредиентов")
+    @Step("Проверка ответа при создании заказа без ингредиентов")
     public void validateCreateOrderWithoutIngredientsResponse(ValidatableResponse orderResponse) {
         orderResponse.assertThat()
                 .statusCode(SC_BAD_REQUEST)
@@ -82,7 +75,7 @@ public class OrderApi extends Specification {
                 .body("message", equalTo("Ingredient ids must be provided"));
     }
 
-    @Step("Проверка успешного ответа на получение заказов")
+    @Step("Проверка успешного ответа при получении заказа")
     public void validateGetOrderResponse(ValidatableResponse getOrderResponse) {
         getOrderResponse.assertThat()
                 .statusCode(SC_OK)
@@ -90,13 +83,11 @@ public class OrderApi extends Specification {
                 .body("success", equalTo(true));
     }
 
-    @Step("Проверка ответа для неавторизованного доступа к получению заказа")
+    @Step("Проверка ответа при к получению заказа без авторизации")
     public void validateGetOrderResponseWithoutAuth(ValidatableResponse getOrderResponse) {
         getOrderResponse.assertThat()
                 .statusCode(SC_UNAUTHORIZED)
                 .and()
                 .body("message", equalTo("You should be authorised"));
     }
-
-
 }

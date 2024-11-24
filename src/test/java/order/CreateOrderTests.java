@@ -1,5 +1,8 @@
 package order;
 
+import io.qameta.allure.Description;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.ValidatableResponse;
 import org.junit.After;
@@ -13,6 +16,8 @@ import java.util.List;
 
 import static org.apache.http.HttpStatus.*;
 
+@Epic("Диплом. Тестирование API.")
+@DisplayName("Создание заказа")
 public class CreateOrderTests {
 
     private UserApi userApi;
@@ -28,30 +33,29 @@ public class CreateOrderTests {
 
 
     @Before
+    @Step("Подготовка данных пользователя")
     public void setUp() {
         userApi = new UserApi();
         user = User.getUser();
-        userApi.createUser(user);
+        accessToken = userApi.getToken(user);
         orderApi = new OrderApi();
     }
 
     @After
-    public void tearDown() {
-        try {
+    @Step("Удаление пользователя")
+    public void cleanUp() {
+        if (accessToken != null) {
             userApi.deleteUser(accessToken);
-        } catch (Throwable e) {
-            e.printStackTrace();
         }
     }
 
     @Test
     @DisplayName("Создание заказа авторизованным пользователем")
-    public void createOrderWithAuth() {
+    @Description("Заказ можно создать")
+    public void createOrderWithAuthTest() {
         User testUser = new User(user.getEmail(), user.getPassword());
         ValidatableResponse loginResponse = userApi.loginUser(testUser);
         userApi.validateLoginResponse(loginResponse);
-
-        accessToken = loginResponse.extract().path("accessToken");
 
         order = new Order(ingredients);
         ValidatableResponse orderResponse = orderApi.createOrderWithAuth(order, accessToken);
@@ -60,7 +64,8 @@ public class CreateOrderTests {
 
     @Test
     @DisplayName("Создание заказа пользователем без авторизации")
-    public void createOrderWithoutAuth() {
+    @Description("Заказ можно создать")
+    public void createOrderWithoutAuthTest() {
         order = new Order(ingredients);
         ValidatableResponse orderResponse = orderApi.createOrderWithoutAuth(order);
         orderApi.validateCreateOrderResponse(orderResponse);
@@ -68,27 +73,23 @@ public class CreateOrderTests {
 
     @Test
     @DisplayName("Создание заказа без ингредиентов авторизованным пользователем")
-    public void createOrderWithoutIngredients() {
+    @Description("Заказ нельзя создать. Появляется сообщение об ошибке")
+    public void createOrderWithoutIngredientsTest() {
         User testUser = new User(user.getEmail(), user.getPassword());
         ValidatableResponse loginResponse = userApi.loginUser(testUser);
         userApi.validateLoginResponse(loginResponse);
-        accessToken = loginResponse.extract().path("accessToken");
-
         order = new Order(null);
         ValidatableResponse orderResponse = orderApi.createOrderWithAuth(order, accessToken);
-
         orderApi.validateCreateOrderWithoutIngredientsResponse(orderResponse);
     }
 
     @Test
     @DisplayName("Создание заказа с неверным хешем ингредиентов авторизованным пользователем")
-    public void createOrderWithWrongHashIngredient() {
+    @Description("Заказ нельзя создать. Появляется сообщение об ошибке")
+    public void createOrderWithWrongHashIngredientTest() {
         User testUser = new User(user.getEmail(), user.getPassword());
         ValidatableResponse loginResponse = userApi.loginUser(testUser);
         userApi.validateLoginResponse(loginResponse);
-
-        accessToken = loginResponse.extract().path("accessToken");
-
         ingredients.set(0, "12345");
         order = new Order(ingredients);
         ValidatableResponse orderResponse = orderApi.createOrderWithAuth(order, accessToken);

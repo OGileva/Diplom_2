@@ -1,14 +1,16 @@
 package user;
 
+import io.qameta.allure.Description;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.ValidatableResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.apache.http.HttpStatus.*;
-
+@Epic("Диплом. Тестирование API.")
+@DisplayName("Авторизация пользователя")
 public class LoginUserTests {
 
     private UserApi userApi;
@@ -16,25 +18,26 @@ public class LoginUserTests {
     private String accessToken;
 
     @Before
+    @Step("Подготовка данных пользователя и получение токена")
     public void setUp() {
         userApi = new UserApi();
         user = User.getUser();
-        userApi.createUser(user);
+        accessToken = userApi.getToken(user);
     }
 
     @After
+    @Step("Удаление пользователя")
     public void cleanUp() {
-        try {
+        if (accessToken != null) {
             userApi.deleteUser(accessToken);
-        } catch (Throwable e) {
-            e.printStackTrace();
         }
     }
 
 
     @Test
     @DisplayName("Вход существующего пользователя")
-    public void loginExistingUser() {
+    @Description("Успешный вход для пользователя с валидными данными")
+    public void existUserLoginTest() {
         User testUser = new User(user.getEmail(), user.getPassword());
         ValidatableResponse loginResponse = userApi.loginUser(testUser);
         accessToken = userApi.validateLoginResponse(loginResponse);
@@ -42,7 +45,8 @@ public class LoginUserTests {
 
     @Test
     @DisplayName("Вход с неверным паролем")
-    public void loginWrongPassword() {
+    @Description("Невозможно осуществить вход в неверным паролем")
+    public void wrongPasswordLoginTest() {
         User testUser = new User(user.getEmail(), "123");
         ValidatableResponse loginResponse = userApi.loginUser(testUser);
         userApi.validateLoginIncorrectPasswordResponse(loginResponse);
@@ -50,9 +54,10 @@ public class LoginUserTests {
 
     @Test
     @DisplayName("Вход с неверным email")
-    public void loginWrongEmail() {
+    @Description("Невозможно осуществить вход в неверным email")
+    public void wrongEmailLoginTest() {
         User testUser = new User("sejh43jh", user.getPassword());
         ValidatableResponse loginResponse = userApi.loginUser(testUser);
-       userApi.validateLoginIncorrectEmailResponse(loginResponse);
+        userApi.validateLoginIncorrectEmailResponse(loginResponse);
     }
 }

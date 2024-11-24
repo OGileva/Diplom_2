@@ -1,7 +1,11 @@
 package order;
 
+import io.qameta.allure.Description;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.ValidatableResponse;
+import org.apache.commons.lang3.builder.HashCodeExclude;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,10 +15,8 @@ import user.UserApi;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.apache.http.HttpStatus.*;
-
+@Epic("Диплом. Тестирование API.")
+@DisplayName("Получение заказа")
 public class GetOrderTests {
 
     private UserApi userApi;
@@ -29,25 +31,26 @@ public class GetOrderTests {
     private String accessToken;
 
     @Before
+    @Step("Подготовка данных пользователя")
     public void setUp() {
         userApi = new UserApi();
         user = User.getUser();
-        userApi.createUser(user);
+        accessToken = userApi.getToken(user);
         orderApi = new OrderApi();
     }
 
     @After
-    public void tearDown() {
-        try {
+    @Step("Удаление пользователя")
+    public void cleanUp() {
+        if (accessToken != null) {
             userApi.deleteUser(accessToken);
-        } catch (Throwable e) {
-            e.printStackTrace();
         }
     }
 
     @Test
     @DisplayName("Получение заказов авторизованного пользователя")
-    public void getOrderWithAuth() {
+    @Description("Список заказов можно получить")
+    public void getOrderWithAuthTest() {
         User testUser = new User(user.getEmail(), user.getPassword());
         ValidatableResponse loginResponse = userApi.loginUser(testUser);
         userApi.validateLoginResponse(loginResponse);
@@ -63,7 +66,8 @@ public class GetOrderTests {
 
     @Test
     @DisplayName("Получение заказа неавторизованного пользователя")
-    public void getOrderWithoutAuth() {
+    @Description("Список заказов нельзя получит получить. Появляется сообщение об ошибке")
+    public void getOrderWithoutAuthTest() {
         order = new Order(ingredients);
         ValidatableResponse orderResponseWithoutAuth = orderApi.createOrderWithoutAuth(order);
         orderApi.validateGetOrderResponse(orderResponseWithoutAuth);

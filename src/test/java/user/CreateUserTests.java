@@ -1,56 +1,60 @@
 package user;
 
+import io.qameta.allure.Description;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.ValidatableResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.apache.http.HttpStatus.*;
-
+@Epic("Диплом. Тестирование API.")
+@DisplayName("Создание пользователя")
 public class CreateUserTests {
 
     private UserApi userApi;
     private User user;
     private String accessToken;
 
+    @Step("Подготовка данных пользователя")
     @Before
     public void setUp() {
         userApi = new UserApi();
         user = user.getUser();
     }
 
+    @Step("Удаление пользователя")
     @After
     public void cleanUp() {
-        try {
+        if (accessToken != null) {
             userApi.deleteUser(accessToken);
-        } catch (Throwable e) {
-            e.printStackTrace();
         }
     }
 
     @Test
     @DisplayName("Создание уникального пользователя")
-    public void createNewUser() {
+    @Description("Пользователя можно создать")
+    public void createNewUserTest() {
         ValidatableResponse createResponse = userApi.createUser(user);
-        accessToken = userApi.validateCreateUserResponse(createResponse);
+        userApi.validateCreateUserResponse(createResponse);
+        accessToken = createResponse.extract().path("accessToken");
     }
 
     @Test
     @DisplayName("Создание пользователя, который уже зарегистрирован")
-    public void createExistingUser() {
+    @Description("Нельзя создать двух одинаковых пользователей")
+    public void createExistingUserTest() {
         ValidatableResponse createResponseFirst = userApi.createUser(user);
         ValidatableResponse createResponseSecond = userApi.createUser(user);
         userApi.validateCreateExistingUserResponse(createResponseSecond);
-
         accessToken = createResponseFirst.extract().path("accessToken");
-
     }
 
     @Test
     @DisplayName("Создание пользователя с незаполненным полем name")
-    public void createUserWithoutName() {
+    @Description("Нельзя создать пользователя без поля имя")
+    public void createUserWithoutNameTest() {
         user.setName(null);
         ValidatableResponse createResponse = userApi.createUser(user);
         userApi.validateCreateUserWithoutFieldResponse(createResponse);
@@ -58,7 +62,8 @@ public class CreateUserTests {
 
     @Test
     @DisplayName("Создание пользователя с незаполненным полем email")
-    public void createUserWithoutEmail() {
+    @Description("Нельзя создать пользователя без поля email")
+    public void createUserWithoutEmailTest() {
         user.setEmail(null);
         ValidatableResponse createResponse = userApi.createUser(user);
         userApi.validateCreateUserWithoutFieldResponse(createResponse);
@@ -66,7 +71,8 @@ public class CreateUserTests {
 
     @Test
     @DisplayName("Создание пользователя с незаполненным полем password")
-    public void createUserWithoutPassword() {
+    @Description("Нельзя создать пользователя без поля пароль")
+    public void createUserWithoutPasswordTest() {
         user.setPassword(null);
         ValidatableResponse createResponse = userApi.createUser(user);
         userApi.validateCreateUserWithoutFieldResponse(createResponse);
