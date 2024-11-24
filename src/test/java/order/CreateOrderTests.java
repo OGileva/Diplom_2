@@ -11,8 +11,6 @@ import user.UserApi;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.apache.http.HttpStatus.*;
 
 public class CreateOrderTests {
@@ -50,21 +48,14 @@ public class CreateOrderTests {
     @DisplayName("Создание заказа авторизованным пользователем")
     public void createOrderWithAuth() {
         User testUser = new User(user.getEmail(), user.getPassword());
-        ValidatableResponse loginResponse = userApi.loginUser(user);
-        loginResponse.assertThat()
-                .statusCode(SC_OK)
-                .and()
-                .body("success", equalTo(true));
+        ValidatableResponse loginResponse = userApi.loginUser(testUser);
+        userApi.validateLoginResponse(loginResponse);
+
         accessToken = loginResponse.extract().path("accessToken");
 
         order = new Order(ingredients);
         ValidatableResponse orderResponse = orderApi.createOrderWithAuth(order, accessToken);
-        orderResponse.assertThat()
-                .statusCode(SC_OK)
-                .and()
-                .body("success", equalTo(true))
-                .and()
-                .body("order.number", notNullValue());
+        orderApi.validateCreateOrderResponse(orderResponse);
     }
 
     @Test
@@ -72,42 +63,30 @@ public class CreateOrderTests {
     public void createOrderWithoutAuth() {
         order = new Order(ingredients);
         ValidatableResponse orderResponse = orderApi.createOrderWithoutAuth(order);
-        orderResponse.assertThat()
-                .statusCode(SC_OK)
-                .and()
-                .body("success", equalTo(true))
-                .and()
-                .body("order.number", notNullValue());
+        orderApi.validateCreateOrderResponse(orderResponse);
     }
 
     @Test
     @DisplayName("Создание заказа без ингредиентов авторизованным пользователем")
     public void createOrderWithoutIngredients() {
         User testUser = new User(user.getEmail(), user.getPassword());
-        ValidatableResponse loginResponse = userApi.loginUser(user);
-        loginResponse.assertThat()
-                .statusCode(SC_OK)
-                .and()
-                .body("success", equalTo(true));
+        ValidatableResponse loginResponse = userApi.loginUser(testUser);
+        userApi.validateLoginResponse(loginResponse);
         accessToken = loginResponse.extract().path("accessToken");
 
         order = new Order(null);
         ValidatableResponse orderResponse = orderApi.createOrderWithAuth(order, accessToken);
-        orderResponse.assertThat()
-                .statusCode(SC_BAD_REQUEST)
-                .and()
-                .body("message", equalTo("Ingredient ids must be provided"));
+
+        orderApi.validateCreateOrderWithoutIngredientsResponse(orderResponse);
     }
 
     @Test
     @DisplayName("Создание заказа с неверным хешем ингредиентов авторизованным пользователем")
     public void createOrderWithWrongHashIngredient() {
         User testUser = new User(user.getEmail(), user.getPassword());
-        ValidatableResponse loginResponse = userApi.loginUser(user);
-        loginResponse.assertThat()
-                .statusCode(SC_OK)
-                .and()
-                .body("success", equalTo(true));
+        ValidatableResponse loginResponse = userApi.loginUser(testUser);
+        userApi.validateLoginResponse(loginResponse);
+
         accessToken = loginResponse.extract().path("accessToken");
 
         ingredients.set(0, "12345");

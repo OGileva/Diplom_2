@@ -49,27 +49,16 @@ public class GetOrderTests {
     @DisplayName("Получение заказов авторизованного пользователя")
     public void getOrderWithAuth() {
         User testUser = new User(user.getEmail(), user.getPassword());
-        ValidatableResponse loginResponse = userApi.loginUser(user);
-        loginResponse.assertThat()
-                .statusCode(SC_OK)
-                .and()
-                .body("success", equalTo(true));
+        ValidatableResponse loginResponse = userApi.loginUser(testUser);
+        userApi.validateLoginResponse(loginResponse);
         accessToken = loginResponse.extract().path("accessToken");
 
         order = new Order(ingredients);
         ValidatableResponse orderResponse = orderApi.createOrderWithAuth(order, accessToken);
-        orderResponse.assertThat()
-                .statusCode(SC_OK)
-                .and()
-                .body("success", equalTo(true))
-                .and()
-                .body("order.number", notNullValue());
+        orderApi.validateCreateOrderResponse(orderResponse);
 
         ValidatableResponse getOrderResponseWithAuth = orderApi.getOrderWithAuth(accessToken);
-        getOrderResponseWithAuth.assertThat()
-                .statusCode(SC_OK)
-                .and()
-                .body("success", equalTo(true));
+        orderApi.validateGetOrderResponse(getOrderResponseWithAuth);
     }
 
     @Test
@@ -77,17 +66,8 @@ public class GetOrderTests {
     public void getOrderWithoutAuth() {
         order = new Order(ingredients);
         ValidatableResponse orderResponseWithoutAuth = orderApi.createOrderWithoutAuth(order);
-        orderResponseWithoutAuth.assertThat()
-                .statusCode(SC_OK)
-                .and()
-                .body("success", equalTo(true))
-                .and()
-                .body("order.number", notNullValue());
-
+        orderApi.validateGetOrderResponse(orderResponseWithoutAuth);
         ValidatableResponse getOrderResponseWithoutAuth = orderApi.getOrderWithoutAuth();
-        getOrderResponseWithoutAuth.assertThat()
-                .statusCode(SC_UNAUTHORIZED)
-                .and()
-                .body("message", equalTo("You should be authorised"));
+        orderApi.validateGetOrderResponseWithoutAuth(getOrderResponseWithoutAuth);
     }
 }
