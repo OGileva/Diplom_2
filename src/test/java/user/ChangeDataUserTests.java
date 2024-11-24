@@ -38,19 +38,13 @@ public class ChangeDataUserTests {
         ValidatableResponse loginResponse = userApi.loginUser(user);
         accessToken = loginResponse.extract().path("accessToken");
         ValidatableResponse updateResponse = userApi.updateUserWithAuth(User.getUser(), accessToken);
-        updateResponse.assertThat()
-                .statusCode(SC_OK)
-                .and()
-                .body("success", equalTo(true));
+        userApi.validateUpdateUserResponse(updateResponse);
     }
 
     @Test
-    @DisplayName("Изменение данных неавторизированного пользователя")
+    @DisplayName("Изменение данных неавторизованного пользователя")
     public void changeDataUserWithoutAuth() {
         ValidatableResponse updateResponse = userApi.updateUserWithoutAuth(User.getUser());
-        updateResponse.assertThat()
-                .statusCode(SC_UNAUTHORIZED)
-                .and()
-                .body("message", equalTo("You should be authorised"));
+        userApi.validateUpdateUserWithoutAuthResponse(updateResponse);
     }
 }

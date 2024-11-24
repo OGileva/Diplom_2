@@ -34,11 +34,7 @@ public class CreateUserTests {
     @DisplayName("Создание уникального пользователя")
     public void createNewUser() {
         ValidatableResponse createResponse = userApi.createUser(user);
-        createResponse.assertThat()
-                .statusCode(SC_OK)
-                .and()
-                .body("success", equalTo(true));
-        accessToken = createResponse.extract().path("accessToken");
+        accessToken = userApi.validateCreateUserResponse(createResponse);
     }
 
     @Test
@@ -46,33 +42,26 @@ public class CreateUserTests {
     public void createExistingUser() {
         ValidatableResponse createResponseFirst = userApi.createUser(user);
         ValidatableResponse createResponseSecond = userApi.createUser(user);
-        createResponseSecond.assertThat()
-                .statusCode(SC_FORBIDDEN)
-                .and()
-                .body("message", equalTo("User already exists"));
+        userApi.validateCreateExistingUserResponse(createResponseSecond);
+
         accessToken = createResponseFirst.extract().path("accessToken");
+
     }
 
     @Test
-    @DisplayName("Создание пользователя с не заполенным полем name")
+    @DisplayName("Создание пользователя с незаполненным полем name")
     public void createUserWithoutName() {
         user.setName(null);
         ValidatableResponse createResponse = userApi.createUser(user);
-        createResponse.assertThat()
-                .statusCode(SC_FORBIDDEN)
-                .and()
-                .body("message", equalTo("Email, password and name are required fields"));
+        userApi.validateCreateUserWithoutFieldResponse(createResponse);
     }
 
     @Test
-    @DisplayName("Создание пользователя с не заполенным полем email")
+    @DisplayName("Создание пользователя с незаполненным полем email")
     public void createUserWithoutEmail() {
         user.setEmail(null);
         ValidatableResponse createResponse = userApi.createUser(user);
-        createResponse.assertThat()
-                .statusCode(SC_FORBIDDEN)
-                .and()
-                .body("message", equalTo("Email, password and name are required fields"));
+        userApi.validateCreateUserWithoutFieldResponse(createResponse);
     }
 
     @Test
@@ -80,9 +69,6 @@ public class CreateUserTests {
     public void createUserWithoutPassword() {
         user.setPassword(null);
         ValidatableResponse createResponse = userApi.createUser(user);
-        createResponse.assertThat()
-                .statusCode(SC_FORBIDDEN)
-                .and()
-                .body("message", equalTo("Email, password and name are required fields"));
+        userApi.validateCreateUserWithoutFieldResponse(createResponse);
     }
 }

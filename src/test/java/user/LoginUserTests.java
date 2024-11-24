@@ -33,36 +33,26 @@ public class LoginUserTests {
 
 
     @Test
-    @DisplayName("Логин под существующим пользователем")
+    @DisplayName("Вход существующего пользователя")
     public void loginExistingUser() {
         User testUser = new User(user.getEmail(), user.getPassword());
-        ValidatableResponse loginResponse = userApi.loginUser(user);
-        loginResponse.assertThat()
-                .statusCode(SC_OK)
-                .and()
-                .body("success", equalTo(true));
-        accessToken = loginResponse.extract().path("accessToken");
+        ValidatableResponse loginResponse = userApi.loginUser(testUser);
+        accessToken = userApi.validateLoginResponse(loginResponse);
     }
 
     @Test
-    @DisplayName("Логин с неверным паролем")
+    @DisplayName("Вход с неверным паролем")
     public void loginWrongPassword() {
         User testUser = new User(user.getEmail(), "123");
         ValidatableResponse loginResponse = userApi.loginUser(testUser);
-        loginResponse.assertThat()
-                .statusCode(SC_UNAUTHORIZED)
-                .and()
-                .body("message", equalTo("email or password are incorrect"));
+        userApi.validateLoginIncorrectPasswordResponse(loginResponse);
     }
 
     @Test
-    @DisplayName("Логин с неверным email")
+    @DisplayName("Вход с неверным email")
     public void loginWrongEmail() {
         User testUser = new User("sejh43jh", user.getPassword());
         ValidatableResponse loginResponse = userApi.loginUser(testUser);
-        loginResponse.assertThat()
-                .statusCode(SC_UNAUTHORIZED)
-                .and()
-                .body("message", equalTo("email or password are incorrect"));
+       userApi.validateLoginIncorrectEmailResponse(loginResponse);
     }
 }
